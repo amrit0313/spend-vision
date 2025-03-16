@@ -34,6 +34,14 @@ interface ExpenseFormProps {
   onExpenseAdded: () => void;
 }
 
+// Default categories to be created for new users
+const DEFAULT_CATEGORIES = [
+  "Food & Dining",
+  "Transportation",
+  "Housing",
+  "Entertainment"
+];
+
 export default function ExpenseForm({ onExpenseAdded }: ExpenseFormProps) {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
@@ -44,6 +52,7 @@ export default function ExpenseForm({ onExpenseAdded }: ExpenseFormProps) {
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [initializingDefaultCategories, setInitializingDefaultCategories] = useState(false);
 
   // Fetch expense categories
   useEffect(() => {
@@ -54,8 +63,35 @@ export default function ExpenseForm({ onExpenseAdded }: ExpenseFormProps) {
     try {
       const data = await getCategories();
       setCategories(data);
+      
+      // If no categories exist, create default ones
+      if (data.length === 0 && !initializingDefaultCategories) {
+        setInitializingDefaultCategories(true);
+        await createDefaultCategories();
+      }
     } catch (error) {
       console.error("Failed to fetch categories:", error);
+    }
+  };
+
+  const createDefaultCategories = async () => {
+    try {
+      const createdCategories = [];
+      for (const categoryName of DEFAULT_CATEGORIES) {
+        const newCategory = await createCategory(categoryName);
+        createdCategories.push(newCategory);
+      }
+      
+      setCategories(createdCategories);
+      if (createdCategories.length > 0) {
+        setCategoryId(createdCategories[0].id.toString());
+      }
+      
+      toast.success("Default expense categories have been created");
+      setInitializingDefaultCategories(false);
+    } catch (error) {
+      console.error("Failed to create default categories:", error);
+      setInitializingDefaultCategories(false);
     }
   };
 
@@ -187,6 +223,9 @@ export default function ExpenseForm({ onExpenseAdded }: ExpenseFormProps) {
                   onInteractOutside={(e) => {
                     e.preventDefault();
                   }}
+                  onEscapeKeyDown={(e) => {
+                    e.preventDefault();
+                  }}
                 >
                   <DialogHeader>
                     <DialogTitle>Add New Category</DialogTitle>
@@ -239,13 +278,16 @@ export default function ExpenseForm({ onExpenseAdded }: ExpenseFormProps) {
                 onInteractOutside={(e) => {
                   e.preventDefault();
                 }}
+                onEscapeKeyDown={(e) => {
+                  e.preventDefault();
+                }}
               >
                 <Calendar
                   mode="single"
                   selected={date}
                   onSelect={handleCalendarSelect}
+                  disabled={(date) => date > new Date()}
                   initialFocus
-                  className={cn("p-3 pointer-events-auto")}
                 />
               </PopoverContent>
             </Popover>
