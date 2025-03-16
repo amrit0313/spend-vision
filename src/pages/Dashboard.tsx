@@ -15,6 +15,7 @@ import ExpenseForm from "@/components/ExpenseForm";
 import IncomeForm from "@/components/IncomeForm";
 import ExpenseList from "@/components/ExpenseList";
 import ExpenseChart from "@/components/ExpenseChart";
+import ExpenseCategoryPieChart from "@/components/ExpenseCategoryPieChart";
 import { LogOut, Menu, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -22,10 +23,14 @@ export default function Dashboard() {
   const { user, logout } = useAuth();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isTransactionSheetOpen, setIsTransactionSheetOpen] = useState(false);
   const isMobile = useIsMobile();
 
   const handleDataChange = () => {
     setRefreshTrigger(prev => prev + 1);
+    if (isMobile) {
+      setIsTransactionSheetOpen(false);
+    }
   };
 
   return (
@@ -49,17 +54,22 @@ export default function Dashboard() {
                     </SheetDescription>
                   </SheetHeader>
                   <div className="mt-8 space-y-4">
-                    <Sheet>
+                    <Sheet open={isTransactionSheetOpen} onOpenChange={setIsTransactionSheetOpen}>
                       <SheetTrigger asChild>
                         <Button 
-                          className="w-full justify-start" 
-                          onClick={() => setIsSidebarOpen(false)}
+                          className="w-full justify-start"
                         >
                           <Plus className="mr-2 h-4 w-4" />
                           Add Transaction
                         </Button>
                       </SheetTrigger>
-                      <SheetContent>
+                      <SheetContent className="sm:max-w-md">
+                        <SheetHeader className="mb-4">
+                          <SheetTitle>Add Transaction</SheetTitle>
+                          <SheetDescription>
+                            Record a new expense or income
+                          </SheetDescription>
+                        </SheetHeader>
                         <Tabs defaultValue="expense" className="w-full">
                           <TabsList className="grid grid-cols-2 mb-4">
                             <TabsTrigger value="expense">Expense</TabsTrigger>
@@ -91,14 +101,20 @@ export default function Dashboard() {
           
           <div className="flex items-center gap-2">
             {!isMobile && (
-              <Sheet>
+              <Sheet open={isTransactionSheetOpen} onOpenChange={setIsTransactionSheetOpen}>
                 <SheetTrigger asChild>
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Transaction
                   </Button>
                 </SheetTrigger>
-                <SheetContent>
+                <SheetContent className="sm:max-w-md">
+                  <SheetHeader className="mb-4">
+                    <SheetTitle>Add Transaction</SheetTitle>
+                    <SheetDescription>
+                      Record a new expense or income
+                    </SheetDescription>
+                  </SheetHeader>
                   <Tabs defaultValue="expense" className="w-full">
                     <TabsList className="grid grid-cols-2 mb-4">
                       <TabsTrigger value="expense">Expense</TabsTrigger>
@@ -126,9 +142,12 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <ExpenseChart />
-          <ExpenseList refreshTrigger={refreshTrigger} />
+          <ExpenseCategoryPieChart />
+          <div className="md:col-span-2">
+            <ExpenseList refreshTrigger={refreshTrigger} />
+          </div>
         </div>
       </main>
     </div>

@@ -43,6 +43,7 @@ export default function ExpenseForm({ onExpenseAdded }: ExpenseFormProps) {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // Fetch expense categories
   useEffect(() => {
@@ -58,7 +59,11 @@ export default function ExpenseForm({ onExpenseAdded }: ExpenseFormProps) {
     }
   };
 
-  const handleAddCategory = async () => {
+  const handleAddCategory = async (e: React.MouseEvent) => {
+    // Prevent event bubbling to parent sheets/modals
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!newCategoryName.trim()) {
       toast.error("Category name cannot be empty");
       return;
@@ -111,13 +116,20 @@ export default function ExpenseForm({ onExpenseAdded }: ExpenseFormProps) {
     }
   };
 
+  // Helper function to handle calendar click and prevent it from closing parent sheets
+  const handleCalendarSelect = (date: Date | undefined) => {
+    if (date) {
+      setDate(date);
+      setIsCalendarOpen(false);
+    }
+  };
+
   return (
-    <div className="bg-card border rounded-lg p-6 shadow-sm animate-fade-in">
-      <h2 className="text-2xl font-semibold mb-6">Add New Expense</h2>
+    <div className="bg-card rounded-lg animate-fade-in">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount*</Label>
+            <Label htmlFor="amount" className="text-sm font-medium">Amount*</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                 $
@@ -137,13 +149,13 @@ export default function ExpenseForm({ onExpenseAdded }: ExpenseFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Category*</Label>
+            <Label htmlFor="category" className="text-sm font-medium">Category*</Label>
             <div className="flex space-x-2">
               <Select value={categoryId} onValueChange={setCategoryId} required>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper">
                   {categories.map((category) => (
                     <SelectItem
                       key={category.id}
@@ -162,11 +174,20 @@ export default function ExpenseForm({ onExpenseAdded }: ExpenseFormProps) {
                     variant="outline"
                     size="icon"
                     className="flex-shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsAddingCategory(true);
+                    }}
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent 
+                  className="sm:max-w-[425px]"
+                  onInteractOutside={(e) => {
+                    e.preventDefault();
+                  }}
+                >
                   <DialogHeader>
                     <DialogTitle>Add New Category</DialogTitle>
                   </DialogHeader>
@@ -195,39 +216,51 @@ export default function ExpenseForm({ onExpenseAdded }: ExpenseFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="date">Date*</Label>
-            <Popover>
+            <Label htmlFor="date" className="text-sm font-medium">Date*</Label>
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
+                  id="date"
                   variant="outline"
                   className="w-full justify-start text-left font-normal"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsCalendarOpen(true);
+                  }}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {date ? format(date, "PPP") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent 
+                className="w-auto p-0" 
+                align="start"
+                onInteractOutside={(e) => {
+                  e.preventDefault();
+                }}
+              >
                 <Calendar
                   mode="single"
                   selected={date}
-                  onSelect={(date) => setDate(date || new Date())}
+                  onSelect={handleCalendarSelect}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
                 />
               </PopoverContent>
             </Popover>
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            placeholder="Add details about this expense"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="min-h-[100px]"
-          />
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="Add details about this expense"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="min-h-[80px] resize-none"
+            />
+          </div>
         </div>
 
         <Button type="submit" className="w-full mt-6" disabled={isLoading}>
