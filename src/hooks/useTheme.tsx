@@ -2,10 +2,13 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
+type ColorScheme = "blue" | "black";
 
 interface ThemeContextType {
   theme: Theme;
+  colorScheme: ColorScheme;
   toggleTheme: () => void;
+  toggleColorScheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -19,6 +22,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       ? "dark" 
       : "light";
   });
+  
+  const [colorScheme, setColorScheme] = useState<ColorScheme>(() => {
+    const savedColorScheme = localStorage.getItem("colorScheme") as ColorScheme;
+    return savedColorScheme || "blue";
+  });
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -29,15 +37,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       root.classList.remove("dark");
     }
     
+    // Apply color scheme
+    if (colorScheme === "black") {
+      root.classList.add("black-theme");
+    } else {
+      root.classList.remove("black-theme");
+    }
+    
     localStorage.setItem("theme", theme);
-  }, [theme]);
+    localStorage.setItem("colorScheme", colorScheme);
+  }, [theme, colorScheme]);
 
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === "light" ? "dark" : "light");
   };
+  
+  const toggleColorScheme = () => {
+    setColorScheme(prevScheme => prevScheme === "blue" ? "black" : "blue");
+  };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, colorScheme, toggleTheme, toggleColorScheme }}>
       {children}
     </ThemeContext.Provider>
   );
