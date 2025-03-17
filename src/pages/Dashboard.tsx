@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +18,7 @@ import ExpenseChart from "@/components/ExpenseChart";
 import ExpenseCategoryPieChart from "@/components/ExpenseCategoryPieChart";
 import { LogOut, Menu, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -58,6 +59,7 @@ export default function Dashboard() {
                       <SheetTrigger asChild>
                         <Button 
                           className="w-full justify-start"
+                          variant="black"
                         >
                           <Plus className="mr-2 h-4 w-4" />
                           Add Transaction
@@ -84,6 +86,12 @@ export default function Dashboard() {
                         </Tabs>
                       </SheetContent>
                     </Sheet>
+                    
+                    <div className="flex items-center justify-between w-full p-2 border rounded-md">
+                      <span className="text-sm">Toggle Theme</span>
+                      <ThemeToggle variant="switch" />
+                    </div>
+                    
                     <Button 
                       variant="outline" 
                       className="w-full justify-start text-muted-foreground" 
@@ -103,7 +111,7 @@ export default function Dashboard() {
             {!isMobile && (
               <Sheet open={isTransactionSheetOpen} onOpenChange={setIsTransactionSheetOpen}>
                 <SheetTrigger asChild>
-                  <Button>
+                  <Button variant="black">
                     <Plus className="mr-2 h-4 w-4" />
                     Add Transaction
                   </Button>
@@ -130,6 +138,8 @@ export default function Dashboard() {
                 </SheetContent>
               </Sheet>
             )}
+            
+            {!isMobile && <ThemeToggle />}
             
             {!isMobile && (
               <Button variant="outline" size="icon" onClick={logout}>
